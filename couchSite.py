@@ -14,10 +14,17 @@ class CouchUploader():
   """Performs the upload
   """
 
-  def __init__(self,sitePath, couchDB_URL='http://localhost:5984', databaseName='test'):
-    self.sitePath=sitePath
+  def __init__(self, couchDB_URL, databaseName):
     self.couchDB_URL=couchDB_URL
     self.databaseName=databaseName
+
+    self.couch = couchdb.Server(self.couchDB_URL)
+
+    try:
+        self.db = self.couch[self.databaseName]
+    except couchdb.ResourceNotFound:
+        self.db = self.couch.create(self.databaseName)
+
 
 
   def uploadDirectoryToDocument(self,directory,documentID):
@@ -28,10 +35,10 @@ class CouchUploader():
     a flat list like the output of the 'find' command.
     """
 
+    print ("uploading ", directory, " to ", documentID, " of ", self.databaseName)
+
     # find the database and delete the .site related
     # documents if they already exist
-    self.couch = couchdb.Server(self.couchDB_URL)
-    self.db = self.couch[self.databaseName]
 
     # create the document
     document = self.db.get(documentID)
@@ -44,13 +51,13 @@ class CouchUploader():
     self.db.save(documentJSON)
 
     # put the attachments onto the document
-    for root, dirs, files in os.walk(self.sitePath):
+    for root, dirs, files in os.walk(directory):
         for fileName in files:
             if fileName.startswith('.'):
                 continue
             fileNamePath = os.path.join(root,fileName)
             try:
-                relPath = os.path.relpath(fileNamePath, self.sitePath)
+                relPath = os.path.relpath(fileNamePath, directory)
                 fp = open(fileNamePath, "rb")
                 self.db.put_attachment(documentJSON, fp, relPath)
                 fp.close()
@@ -63,15 +70,10 @@ class CouchUploader():
 
   def uploadDesignDocuments(self,directory):
     """
-    For each json file in the directory create a design document based
+    For each python file in the directory create a design document based
     on the filename containing the json formatted views (map reduce
     javascript functions).
     """
-
-    # find the database and delete the .site related
-    # documents if they already exist
-    self.couch = couchdb.Server(self.couchDB_URL)
-    self.db = self.couch[self.databaseName]
 
     import glob
     pattern = os.path.join(directory,'*.py')
@@ -79,9 +81,6 @@ class CouchUploader():
     for viewFile in viewFiles:
         execfile(viewFile)
         for view in views:
-            # make a json compatible view with only double quotes
-            # viewString = str(views[view]).replace("'",'"')
-            viewString = str(views[view]).replace("'",'"')
             viewID = os.path.join('_design',view)
             document = self.db.get(viewID)
             if document:
@@ -94,19 +93,24 @@ class CouchUploader():
 # {{{ main, test, and arg parse
 
 def usage():
+    print ("couchSite [siteDirectory] <DatabaseName>")
     print ("couchSite [siteDirectory] <CouchDB_URL> <DatabaseName>")
     print (" CouchDB_URL default http:localhost:5984")
     print (" DatabaseName default dicom_search")
 
 def main ():
-    global uploader
-    sitePath = sys.argv[1]
-    uploader = CouchUploader(sitePath)
-    if len(sys.argv) > 2:
-        uploader.couchDB_URL = sys.argv[2]
-    if len(sys.argv) > 3:
-        uploader.databaseName = sys.argv[3]
 
+    couchDB_URL='http://localhost:5984'
+    databaseName='test'
+    sitePath = sys.argv[1]
+
+    if len(sys.argv) == 3:
+        databaseName = sys.argv[2]
+    if len(sys.argv) > 3:
+        couchDB_URL = sys.argv[2]
+        databaseName = sys.argv[3]
+
+    uploader = CouchUploader(couchDB_URL, databaseName)
     uploader.uploadDesignDocuments(os.path.join(sitePath+"design"))
     uploader.uploadDirectoryToDocument(os.path.join(sitePath+"site"), ".site")
 
