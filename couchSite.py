@@ -82,6 +82,7 @@ class CouchUploader():
         execfile(viewFile)
         for view in views:
             viewID = os.path.join('_design',view)
+            print ("uploading ", view, " of ", viewFile, " to ", self.databaseName)
             document = self.db.get(viewID)
             if document:
                 self.db.delete(document)
@@ -111,8 +112,8 @@ def main ():
         databaseName = sys.argv[3]
 
     uploader = CouchUploader(couchDB_URL, databaseName)
-    uploader.uploadDesignDocuments(os.path.join(sitePath+"design"))
-    uploader.uploadDirectoryToDocument(os.path.join(sitePath+"site"), ".site")
+    uploader.uploadDesignDocuments(os.path.join(sitePath,"design"))
+    uploader.uploadDirectoryToDocument(os.path.join(sitePath,"site"), ".site")
 
 forIPython = """
 import sys
