@@ -35,7 +35,7 @@ class CouchUploader():
     a flat list like the output of the 'find' command.
     """
 
-    print ("uploading ", directory, " to ", documentID, " of ", self.databaseName)
+    print("uploading ", directory, " to ", documentID, " of ", self.databaseName)
 
     # find the database and delete the .site related
     # documents if they already exist
@@ -82,7 +82,7 @@ class CouchUploader():
         exec(compile(open(viewFile, "rb").read(), viewFile, 'exec'))
         for view in views:
             viewID = os.path.join('_design',view)
-            print ("uploading ", view, " of ", viewFile, " to ", self.databaseName)
+            print("uploading ", view, " of ", viewFile, " to ", self.databaseName)
             document = self.db.get(viewID)
             if document:
                 self.db.delete(document)
@@ -94,10 +94,10 @@ class CouchUploader():
 # {{{ main, test, and arg parse
 
 def usage():
-    print ("couchSite [siteDirectory] <DatabaseName>")
-    print ("couchSite [siteDirectory] <CouchDB_URL> <DatabaseName>")
-    print (" CouchDB_URL default http:localhost:5984")
-    print (" DatabaseName default dicom_search")
+    print("couchSite [siteDirectory] <DatabaseName>")
+    print("couchSite [siteDirectory] <CouchDB_URL> <DatabaseName>")
+    print(" CouchDB_URL default http:localhost:5984")
+    print(" DatabaseName default dicom_search")
 
 def main ():
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
             raise BaseException('missing arguments')
         main()
     except Exception as e:
-        print ('ERROR, UNEXPECTED EXCEPTION')
+        print('ERROR, UNEXPECTED EXCEPTION')
         print(str(e))
         traceback.print_exc()
 
