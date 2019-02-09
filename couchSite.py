@@ -79,7 +79,7 @@ class CouchUploader():
     pattern = os.path.join(directory,'*.py')
     viewFiles = glob.glob(pattern)
     for viewFile in viewFiles:
-        execfile(viewFile)
+        exec(compile(open(viewFile, "rb").read(), viewFile, 'exec'))
         for view in views:
             viewID = os.path.join('_design',view)
             print ("uploading ", view, " of ", viewFile, " to ", self.databaseName)
